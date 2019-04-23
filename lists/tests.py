@@ -13,7 +13,7 @@ class ItemModelTest(TestCase):
     first_item.save()
 
     second_item = Item()
-    second_item.test = '두 번째 아이템'
+    second_item.text = '두 번째 아이템'
     second_item.save()
 
     saved_items = Item.objects.all()
@@ -32,32 +32,33 @@ class HomePageTest(TestCase):
     found = resolve('/')
     self.assertEqual(found.func, home_page)
 
-  # CSRF 에 따라 다르게 나오는 부분을 처리해줘야 하는데 어떻게 해야되는지 모르겠음. 
+  def test_uses_home_template(self):
+    response = self.client.get('/')
+    self.assertTemplateUsed(response, 'home.html')
 
-  # def test_home_page_returns_correct_html(self):
-  #   request = HttpRequest()
-  #   response = home_page(request)
-  #   # expected_html = render_to_string('home.html')
-  #   csrf_client = Client(enforce_csrf_checks=True)
-  #   expected_html = csrf_client.get('/').content
-  #   self.assertEqual(response.content.decode(), expected_html.decode())
+  def test_home_page_can_save_a_POST_request(self):
+    response = self.client.post('/', data={'item_text': '신규 작업 아이템'})
+    self.assertEqual(Item.objects.count(),1)
 
-  # def test_home_page_can_save_a_POST_request(self):
-  #   request = HttpRequest()
-  #   request.method = 'POST'
-  #   request.POST['item_text'] = '신규 작업 아이템'
+    new_item = Item.objects.first()
+    self.assertEqual(new_item.text, '신규 작업 아이템')
 
-  #   response = home_page(request)
+    self.assertIn(response.content.decode(), '신규 작업 아이템')
 
-  #   csrf_client = Client(enforce_csrf_checks=True)
-  #   expected_html = csrf_client.post('/', {'item_text': '신규 작업 아이템'}).content
-  #   self.assertIn('신규 작업 아이템', response.content.decode())
-  #   # expected_html = render_to_string(
-  #   #   'home.html',
-  #   #   {'new_item_text': '신규 작업 아이템'}
-  #   # )
-  #   self.assertEqual(response.content.decode(), expected_html.decode())
+  def test_home_page_only_save_items_when_necessary(self):
+    request = HttpRequest()
+    home_page(request)
+    self.assertEqual(Item.objects.count(),0)
 
+  def test_home_page_redirects_after_POST(self):
+    request = HttpRequest()
+    request.method = 'POST'
+    request.POST['item_text'] = '신규 작업 아이템'
+
+    response = home_page(request)
+
+    self.assertEqual(response.status_code, 302)
+    self.assertEqual(response['location'], '/')
 
 
 # Create your tests here.
