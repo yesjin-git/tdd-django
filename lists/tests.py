@@ -39,7 +39,7 @@ class HomePageTest(TestCase):
   def test_home_page_can_save_a_POST_request(self):
     response = self.client.post('/', data={'item_text': '신규 작업 아이템'})
 
-    setl.assertEqual(Item.objects.count(), 1)
+    self.assertEqual(Item.objects.count(), 1)
     new_item = Item.objects.first()
     self.assertEqual(new_item.text, '신규 작업 아이템')
 
@@ -48,7 +48,7 @@ class HomePageTest(TestCase):
     self.assertEqual(Item.objects.count(),0)
 
   def test_home_page_redirects_after_POST(self):
-    request = self.client.post('/', data={'item_text': 'A new list item'})
+    response = self.client.post('/', data={'item_text': 'A new list item'})
     self.assertEqual(response.status_code, 302)
     self.assertEqual(response['location'], '/')
 
